@@ -72,9 +72,11 @@ const Board = ({
   pencilState,
   onClick,
 }: Props) => {
-  console.log({ window });
   let smallSquareLength =
-    (Math.min(window.screen.width, window.screen.height) - 100) / 9;
+    (Math.min(window.screen.availWidth, window.screen.availHeight) - 100) / 9;
+  if (smallSquareLength > 60) {
+    smallSquareLength = 60
+  }
   let tinySquareLength = smallSquareLength / 3;
   const getDisplayedValue = (rowIndex: number, colIndex: number) => {
     if (solvingState[rowIndex][colIndex] !== 0) {

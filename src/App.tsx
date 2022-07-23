@@ -156,7 +156,6 @@ function App() {
   };
 
   const handleKeyDown: KeyboardEventHandler<HTMLDivElement> = (event) => {
-    console.log({ event });
     if (/^\d$/.test(event.key)) {
       handleNumberSelect(parseInt(event.key));
       return;
