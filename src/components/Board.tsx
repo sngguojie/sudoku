@@ -26,9 +26,7 @@ const SmallSquare = styled.div<{
 }>`
   height: ${(props) => `${props.length}px`};
   width: ${(props) => `${props.length}px`};
-  border: ${(props) =>
-    props.targeted ? "2px solid orange" : "1px solid black"};
-  margin: ${(props) => (props.targeted ? "-1px" : "0")};
+  border: 1px solid black;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -38,18 +36,22 @@ const SmallSquare = styled.div<{
     background-color: lightblue;
   }
   background-color: ${(props) =>
-    props.error ? "pink" : props.highlighted ? "lightblue" : "transparent"};
+    props.error
+      ? "pink"
+      : props.targeted
+      ? "rgba(247, 189, 0, 0.5)"
+      : props.highlighted
+      ? "lightblue"
+      : "transparent"};
 `;
 
 const TinySquare = styled.div<{ highlighted: boolean; length: number }>`
   height: ${(props) => `${props.length}px`};
   width: ${(props) => `${props.length}px`};
-  font-size: 12px;
+  font-size: 10px;
   display: flex;
   justify-content: center;
   align-items: center;
-  border: 1px dotted grey;
-  margin: -1px;
   background-color: ${(props) =>
     props.highlighted ? "lightblue" : "transparent"};
 `;
@@ -75,7 +77,7 @@ const Board = ({
   let smallSquareLength =
     (Math.min(window.screen.availWidth, window.screen.availHeight) - 100) / 9;
   if (smallSquareLength > 60) {
-    smallSquareLength = 60
+    smallSquareLength = 60;
   }
   let tinySquareLength = smallSquareLength / 3;
   const getDisplayedValue = (rowIndex: number, colIndex: number) => {

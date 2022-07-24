@@ -128,6 +128,15 @@ function App() {
     setPencilState(newState);
     updateLocalStorage("pencilState", newState);
   };
+
+  const clearPencilState = (rowIndex: number, colIndex: number) => {
+    let newState = pencilState.map((row) =>
+      row.map((writings) => [...writings])
+    );
+    newState[rowIndex][colIndex] = [];
+    setPencilState(newState);
+    updateLocalStorage("pencilState", newState);
+  };
   const handleClick = (rowIndex: number, colIndex: number) => {
     if (state[rowIndex][colIndex] === 0) {
       setTargetSquare([rowIndex, colIndex]);
@@ -190,6 +199,9 @@ function App() {
     if (event.key === " ") {
       setPencilMode(!pencilMode);
     }
+    if (event.key === "Backspace") {
+      handleTrash();
+    }
   };
 
   const resetPencilState = () => {
@@ -212,9 +224,25 @@ function App() {
     resetPencilState();
   };
 
+  const highlightedNumbers = targetSquare
+    ? pencilState[targetSquare[0]][targetSquare[1]]
+    : [];
+  const handleTrash = () => {
+    if (
+      targetSquare !== undefined &&
+      state[targetSquare[0]][targetSquare[1]] === 0
+    ) {
+      if (!pencilMode) {
+        handleNumberSelect(0);
+      } else {
+        clearPencilState(targetSquare[0], targetSquare[1]);
+      }
+    }
+  };
+
   return (
     <Container onKeyDown={handleKeyDown} tabIndex={0}>
-      <div style={{ marginBottom: "20px" }}>
+      <div style={{ marginBottom: "20px", display: "flex" }}>
         <RoundButton onClick={handlefetchPuzzle}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -262,9 +290,10 @@ function App() {
       <NumberSelector
         onSelect={(n) => handleNumberSelect(n)}
         completedNumbers={completedNumbers}
+        highlightedNumbers={highlightedNumbers}
       />
-      <div style={{ marginTop: "50px" }}>
-        <RoundButton onClick={() => handleNumberSelect(0)}>
+      <div style={{ marginTop: "50px", display: "flex" }}>
+        <RoundButton onClick={handleTrash}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             className="h-6 w-6"

@@ -9,10 +9,15 @@ const Container = styled.div`
 `;
 type Props = {
   completedNumbers: number[];
+  highlightedNumbers: number[];
   onSelect: (n: number) => void;
 };
 
-const NumberSelector = ({ onSelect, completedNumbers }: Props) => {
+const NumberSelector = ({
+  onSelect,
+  completedNumbers,
+  highlightedNumbers,
+}: Props) => {
   return (
     <Container>
       {Array.from(Array(9).keys()).map((i) => {
@@ -20,6 +25,9 @@ const NumberSelector = ({ onSelect, completedNumbers }: Props) => {
         return (
           <RoundButton
             disabled={completedNumbers.includes(n)}
+            highlightColor={
+              highlightedNumbers.includes(n) ? "lightgreen" : undefined
+            }
             onClick={() => onSelect(n)}
           >
             {n}
