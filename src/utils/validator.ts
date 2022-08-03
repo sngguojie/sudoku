@@ -1,4 +1,3 @@
-
 const getRepeatedIndexes = (array: number[]) => {
   let numberIndexes: { [key: number]: number[] } = {}
   let keys: number[] = []
@@ -21,24 +20,24 @@ const getRepeatedIndexes = (array: number[]) => {
   return result
 }
 
-export const getInvalidSquares = (state: number[][]) => {
-  let invalidSquares: number[][] = Array.from({ length: 9 }, () => Array(9).fill(0))
+export const getInvalidSquares = (state: number[][]): { invalidSquares: boolean[][], isValid: boolean } => {
+  let invalidSquares: boolean[][] = Array.from({ length: 9 }, () => Array(9).fill(false))
   let isValid = true
   // check rows
   state.forEach((row, rowIndex) => {
     let repeatedIndexes = getRepeatedIndexes(row)
-    isValid = isValid && repeatedIndexes.length === 0
+    isValid &&= repeatedIndexes.length === 0
     repeatedIndexes.forEach(repeatedIndex => {
-      invalidSquares[rowIndex][repeatedIndex] = 1
+      invalidSquares[rowIndex][repeatedIndex] = true
     })
   })
   // check columns
   for (let colIndex = 0; colIndex < 9; colIndex ++) {
     let column = state.map(row => row[colIndex])
     let repeatedIndexes = getRepeatedIndexes(column)
-    isValid = isValid && repeatedIndexes.length === 0
+    isValid &&= repeatedIndexes.length === 0
     repeatedIndexes.forEach(repeatedIndex => {
-      invalidSquares[repeatedIndex][colIndex] = 1
+      invalidSquares[repeatedIndex][colIndex] = true
     })
   }
   // check squares
@@ -53,11 +52,11 @@ export const getInvalidSquares = (state: number[][]) => {
         }
       }
       let repeatedIndexes = getRepeatedIndexes(squareNumbers)
-      isValid = isValid && repeatedIndexes.length === 0
+      isValid &&= repeatedIndexes.length === 0
       repeatedIndexes.forEach(repeatedIndex => {
         let squareRow = Math.floor(repeatedIndex / 3)
         let squareCol = repeatedIndex % 3
-        invalidSquares[a*3+squareRow][b*3+squareCol] = 1
+        invalidSquares[a*3+squareRow][b*3+squareCol] = true
       })
     }
   }
