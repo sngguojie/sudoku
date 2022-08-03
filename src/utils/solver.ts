@@ -1,16 +1,21 @@
-import { cloneDeep } from "lodash"
+import { cloneDeep, uniq } from "lodash"
 import { applyMove } from "./common"
 import { numbers } from "./constants"
 
+// Array of [rowIndex, colIndex]
+// [[0,0], [0,1]...]
+const puzzleIndexes = Array.from(Array(9).keys()).flatMap(rowIndex => {
+  return Array.from(Array(9).keys()).map(colIndex => [rowIndex, colIndex])
+})
+
 export const isSolved = (puzzle: number[][]) => {
   const collection: number[] = Array.from({ length: 9 }, () => 0)
-  for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
-    for (let colIndex = 0; colIndex < 9; colIndex++) {
-      let n = puzzle[rowIndex][colIndex]
+  for (let i in puzzleIndexes) {
+    let [rowIndex, colIndex] = puzzleIndexes[i]
+    let n = puzzle[rowIndex][colIndex]
       // unfilled
       if (n === 0) return false
       collection[n-1] += 1
-    }
   }
   return collection.every(count => count === 9)
 }
@@ -38,46 +43,33 @@ const calculateValidMovesForSquare = (puzzle: number[][], rowIndex: number, colI
   // check square
   const square = getSquare<number>(puzzle, rowIndex, colIndex) as number[]
   // combine and uniq
-  const invalidNumbers: number[] = []
-  row.forEach(n => {
-    if (!invalidNumbers.includes(n)) {
-      invalidNumbers.push(n)
-    }
-  })
-  column.forEach(n => {
-    if (!invalidNumbers.includes(n)) {
-      invalidNumbers.push(n)
-    }
-  })
-  square.forEach(n => {
-    if (!invalidNumbers.includes(n)) {
-      invalidNumbers.push(n)
-    }
-  })
-  invalidNumbers.sort()
+  let invalidNumbers: number[] = uniq([...row, ...column, ...square])
+  invalidNumbers = invalidNumbers.sort()
   // filter out invalid numbers
   return numbers.filter(n => !invalidNumbers.includes(n))
 }
 
+// validMoves: number[][][] => at each rowIndex/colIndex, it has the array of numbers that do not diretly conflict with the rest of the puzzle
+// countToSquares: number[][][]
+// - If a Square (type: [rowIndex, colIndex]) has n valid numbers, it will be in the array countToSquares[n]
+// - This is initialized as a array of size 10, since there can only be 0 - 9 possible remaining valid numbers in a square
+// unsolvable: boolean => If there is a square where there are no valid moves, this is false.
 export const calculateValidMoves = (puzzle: number[][]): { validMoves: number[][][], countToSquares: number[][][], unsolveable: boolean } => {
   const length = 9
   let validMoves: number[][][] = Array.from({ length }, () => Array.from({ length }, () => []))
   let countToSquares: number[][][] = Array.from({ length: 10 }, () => [])
   let unsolveable = false
-  for (let rowIndex = 0; rowIndex < 9; rowIndex++) {
-    for (let colIndex = 0; colIndex < 9; colIndex++) {
-      if (puzzle[rowIndex][colIndex] === 0) {
-        validMoves[rowIndex][colIndex] = calculateValidMovesForSquare(puzzle, rowIndex, colIndex)
-        let numValidMoves = validMoves[rowIndex][colIndex].length
-        countToSquares[numValidMoves].push([rowIndex, colIndex])
-        if (numValidMoves === 0) {
-          unsolveable = true
-        }
+  for (let i in puzzleIndexes) {
+    let [rowIndex, colIndex] = puzzleIndexes[i]
+    if (puzzle[rowIndex][colIndex] === 0) {
+      validMoves[rowIndex][colIndex] = calculateValidMovesForSquare(puzzle, rowIndex, colIndex)
+      let numValidMoves = validMoves[rowIndex][colIndex].length
+      countToSquares[numValidMoves].push([rowIndex, colIndex])
+      if (numValidMoves === 0) {
+        unsolveable = true
       }
     }
-    
   }
-
   return { validMoves, countToSquares, unsolveable }
 }
 
@@ -99,20 +91,15 @@ export const getSolutions = (puzzle: number[][], maxSolutions: number=2, solutio
     storeSolutions(solutions)
     return solutions
   }
-  // let naiveSolutions = naiveSolver(puzzle)
-  // if (naiveSolutions.length > 0) {
-  //   storeSolutions(naiveSolutions)
-  //   return naiveSolutions
-  // }
-  let memo = calculateValidMoves(puzzle)
-  if (memo.unsolveable) {
+  let { unsolveable, countToSquares, validMoves } = calculateValidMoves(puzzle)
+  if (unsolveable) {
     storeSolutions([])
     return []
   }
-  let sortedSquares = [...memo.countToSquares].flat()
+  let sortedSquares = [...countToSquares].flat()
   let solutions: string[] = []
   let [rowIndex, colIndex] = sortedSquares[0]
-  let nextMoves = memo.validMoves[rowIndex][colIndex].map(n => [rowIndex, colIndex, n])
+  let nextMoves = validMoves[rowIndex][colIndex].map(n => [rowIndex, colIndex, n])
   for (let i in nextMoves) {
     let nextMove = nextMoves[i]
     let nextPuzzleState = applyMove(cloneDeep(puzzle), nextMove)
@@ -129,20 +116,4 @@ export const getSolutions = (puzzle: number[][], maxSolutions: number=2, solutio
   }
   storeSolutions(solutions)
   return solutions
-}
-
-export const naiveSolver = (puzzle: number[][]): string[] => {
-  if (isSolved(puzzle)) {
-    return [JSON.stringify(puzzle)]
-  }
-
-  const { countToSquares, validMoves } = calculateValidMoves(puzzle)
-  if (countToSquares[1].length > 0) {
-    let [rowIndex, colIndex] = countToSquares[1][0]
-    let copy = cloneDeep(puzzle)
-    applyMove(copy, [rowIndex, colIndex, validMoves[rowIndex][colIndex][0]])
-    return naiveSolver(copy)
-  } else {
-    return []
-  }
 }
