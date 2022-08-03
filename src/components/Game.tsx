@@ -1,19 +1,24 @@
 import {
+  CalculatorIcon,
   PencilIcon,
   PlusIcon,
+  QuestionMarkCircleIcon,
   RefreshIcon,
+  RewindIcon,
   TrashIcon,
 } from "@heroicons/react/outline";
 import { cloneDeep } from "lodash";
-import { KeyboardEventHandler, useEffect, useState } from "react";
+import { KeyboardEventHandler, useEffect, useCallback, useState } from "react";
 import ReactConfetti from "react-confetti";
 import styled from "styled-components";
 import useLocalStorage from "../hooks/useLocalStorage";
+import { stringifyPuzzle } from "../utils/common";
 import { numbers } from "../utils/constants";
 import {
   generateSolvedPuzzle,
   generateUnsolvedTruePuzzle,
 } from "../utils/generator";
+import { calculateValidMoves, getSolutions } from "../utils/solver";
 import { getInvalidSquares } from "../utils/validator";
 import Board from "./Board/Board";
 import NumberSelector from "./NumberSelector";
@@ -32,6 +37,7 @@ const ControlsContainer = styled.div<{ numberSide: NumberSideType }>`
 const ControlsButtonContainer = styled.div`
   display: flex;
   flex-direction: column;
+  flex-wrap: wrap;
   height: 100%;
   justify-content: space-around;
   align-items: center;
@@ -48,7 +54,14 @@ const initializePencilState = () => {
     return Array.from({ length: 9 }, () => []);
   });
 };
+
+const fetchPuzzle = async () => {
+  return new Promise<number[][]>((resolve) => {
+    resolve(generateUnsolvedTruePuzzle(generateSolvedPuzzle()));
+  });
+};
 export default function Game() {
+  const cheatMode = window.location.pathname === "/cheat";
   const [state, setState] = useLocalStorage<number[][]>("state");
   const [solvingState, setSolvingState] =
     useLocalStorage<number[][]>("solvingState");
@@ -56,6 +69,7 @@ export default function Game() {
     "pencilState",
     initializePencilState()
   );
+  const [moves, setMoves] = useLocalStorage<number[][]>("moves", []);
   const [targetSquare, setTargetSquare] = useState<number[]>();
   const [highlightedNumber, setHighlightedNumber] = useState<number>();
   const [completedNumbers, setCompletedNumbers] = useState<number[]>([]);
@@ -64,27 +78,38 @@ export default function Game() {
   const [throwConfetti, setThrowConfetti] = useState(false);
   const [fetchPuzzleLoading, setFetchPuzzleLoading] = useState(false);
 
-  const fetchPuzzle = (callback: (data: number[][]) => void) => {
-    setFetchPuzzleLoading(true);
-    callback(generateUnsolvedTruePuzzle(generateSolvedPuzzle()));
-    setFetchPuzzleLoading(false);
-  };
-
   useEffect(() => {
     if (completedNumbers.length === 9) {
       setThrowConfetti(true);
       setTimeout(() => setThrowConfetti(false), 10000);
     }
   }, [completedNumbers]);
+  const resetPencilState = useCallback(() => {
+    let initializedPencilState = initializePencilState();
+    setPencilState(initializedPencilState);
+  }, [setPencilState]);
 
+  const handlefetchPuzzle = useCallback(() => {
+    setFetchPuzzleLoading(true);
+    fetchPuzzle().then((puzzle) => {
+      if (cheatMode) {
+        console.log({
+          puzzle: stringifyPuzzle(puzzle),
+        });
+      }
+      setState(puzzle);
+      setSolvingState(puzzle);
+      setMoves([]);
+      setFetchPuzzleLoading(false);
+      fetchPuzzle();
+      resetPencilState();
+    });
+  }, [setState, setSolvingState, setMoves, resetPencilState, cheatMode]);
   useEffect(() => {
     if (state === undefined) {
-      fetchPuzzle((data) => {
-        setState(data);
-        setSolvingState(data);
-      });
+      handlefetchPuzzle();
     }
-  }, [state, setState, setSolvingState]);
+  }, [state, handlefetchPuzzle]);
 
   useEffect(() => {
     if (solvingState) {
@@ -100,13 +125,22 @@ export default function Game() {
       setCompletedNumbers(newCompletedNumbers);
       const { isValid, invalidSquares: newInvalidSquares } =
         getInvalidSquares(solvingState);
-      if (!isValid) {
+      let shouldSetInvalidSquares = !isValid;
+      if (isValid) {
+        let solutions = getSolutions(solvingState);
+        if (solutions.length !== 1) {
+          shouldSetInvalidSquares = true;
+          let [r, c] = moves[moves.length - 1];
+          newInvalidSquares[r][c] = true;
+        }
+      }
+      if (shouldSetInvalidSquares) {
         setInvalidSquares(newInvalidSquares);
       } else {
         setInvalidSquares(undefined);
       }
     }
-  }, [solvingState]);
+  }, [solvingState, moves]);
 
   if (!state || !solvingState) {
     return null;
@@ -120,6 +154,7 @@ export default function Game() {
     let newState = cloneDeep(solvingState);
     newState[rowIndex][colIndex] = value;
     setSolvingState(newState);
+    setMoves([...moves, [rowIndex, colIndex, value]]);
   };
   const updatePencilState = (
     rowIndex: number,
@@ -214,20 +249,10 @@ export default function Game() {
     }
   };
 
-  const resetPencilState = () => {
-    let initializedPencilState = initializePencilState();
-    setPencilState(initializedPencilState);
-  };
-  const handlefetchPuzzle = () => {
-    fetchPuzzle((data) => {
-      setState(data);
-      setSolvingState(data);
-    });
-    resetPencilState();
-  };
   const handleReset = () => {
     setSolvingState(state);
     resetPencilState();
+    setMoves([]);
   };
 
   const highlightedNumbers =
@@ -246,7 +271,29 @@ export default function Game() {
     }
   };
   const togglePencilMode = () => setPencilMode(!pencilMode);
+  const handleBack = () => {
+    if (moves && moves.length > 0) {
+      let newMoves = cloneDeep(moves);
+      let [r, c] = newMoves.pop() as number[];
+      updateSolvingState(r, c, 0);
+      setMoves(newMoves);
+    }
+  };
 
+  const handlePencilAll = () => {
+    const { validMoves } = calculateValidMoves(solvingState);
+    setPencilState(validMoves);
+  };
+  const handleHint = () => {
+    let solutions = getSolutions(solvingState);
+    const { countToSquares } = calculateValidMoves(solvingState);
+    const [r, c] = [...countToSquares].flat()[0];
+    if (solutions.length > 0) {
+      let n: number = JSON.parse(solutions[0])[r][c];
+      updateSolvingState(r, c, n);
+      setTargetSquare([r, c]);
+    }
+  };
   return (
     <div onKeyDown={handleKeyDown} tabIndex={0}>
       {throwConfetti && <ReactConfetti numberOfPieces={1000} recycle={false} />}
@@ -268,6 +315,19 @@ export default function Game() {
         onClick={handleClick}
       />
       <ControlsContainer numberSide={"left"}>
+        {cheatMode && (
+          <ControlsButtonContainer>
+            <RoundButton onClick={handlePencilAll}>
+              <CalculatorIcon />
+            </RoundButton>
+
+            <RoundButton onClick={handleHint}>
+              <QuestionMarkCircleIcon
+                style={{ height: "1.25rem", width: "1.25rem" }}
+              />
+            </RoundButton>
+          </ControlsButtonContainer>
+        )}
         <ControlsButtonContainer>
           <RoundButton
             onClick={togglePencilMode}
@@ -277,6 +337,9 @@ export default function Game() {
           </RoundButton>
           <RoundButton onClick={handleTrash}>
             <TrashIcon style={{ height: "1.25rem", width: "1.25rem" }} />
+          </RoundButton>
+          <RoundButton onClick={handleBack}>
+            <RewindIcon />
           </RoundButton>
         </ControlsButtonContainer>
         <NumberSelector

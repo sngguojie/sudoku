@@ -1,6 +1,6 @@
 import { solvedPuzzle } from './constants'
 import { generateSolvedPuzzle, generateUnsolvedTruePuzzle } from './generator'
-import { isSolved } from './solver'
+import { getSolutions, isSolved } from './solver'
 
 describe("generator",() => {
   describe("generateSolvedPuzzle", () => {
@@ -14,10 +14,15 @@ describe("generator",() => {
   })
   describe("generateUnsolvedTruePuzzle", () => {
     test("should be different from input puzzle and generates different puzzles", () => {
-      const result = generateUnsolvedTruePuzzle(solvedPuzzle)
-      expect(JSON.stringify(result)).not.toEqual(JSON.stringify(solvedPuzzle))
-      const result2 = generateUnsolvedTruePuzzle(solvedPuzzle)
-      expect(JSON.stringify(result2)).not.toEqual(JSON.stringify(solvedPuzzle))
+      const generatedSolvedPuzzle = generateSolvedPuzzle()
+      const result = generateUnsolvedTruePuzzle(generatedSolvedPuzzle)
+      expect(JSON.stringify(result)).not.toEqual(JSON.stringify(generatedSolvedPuzzle))
+      let solutions = getSolutions(result)
+      expect(solutions.length).toEqual(1)
+      const result2 = generateUnsolvedTruePuzzle(generatedSolvedPuzzle)
+      let solutions2 = getSolutions(result2)
+      expect(solutions2.length).toEqual(1)
+      expect(JSON.stringify(result2)).not.toEqual(JSON.stringify(generatedSolvedPuzzle))
       expect(JSON.stringify(result)).not.toEqual(JSON.stringify(result2))
     })
   })
