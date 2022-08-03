@@ -318,7 +318,7 @@ export default function Game() {
         {cheatMode && (
           <ControlsButtonContainer>
             <RoundButton onClick={handlePencilAll}>
-              <CalculatorIcon />
+              <CalculatorIcon style={{ height: "1.25rem", width: "1.25rem" }} />
             </RoundButton>
 
             <RoundButton onClick={handleHint}>
@@ -339,7 +339,7 @@ export default function Game() {
             <TrashIcon style={{ height: "1.25rem", width: "1.25rem" }} />
           </RoundButton>
           <RoundButton onClick={handleBack}>
-            <RewindIcon />
+            <RewindIcon style={{ height: "1.25rem", width: "1.25rem" }} />
           </RoundButton>
         </ControlsButtonContainer>
         <NumberSelector
