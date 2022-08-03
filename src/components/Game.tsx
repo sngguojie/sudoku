@@ -252,10 +252,10 @@ export default function Game() {
       {throwConfetti && <ReactConfetti numberOfPieces={1000} recycle={false} />}
       <HeaderControls>
         <RoundButton onClick={handlefetchPuzzle} disabled={fetchPuzzleLoading}>
-          <PlusIcon />
+          <PlusIcon style={{ height: "1.25rem", width: "1.25rem" }} />
         </RoundButton>
         <RoundButton onClick={handleReset}>
-          <RefreshIcon />
+          <RefreshIcon style={{ height: "1.25rem", width: "1.25rem" }} />
         </RoundButton>
       </HeaderControls>
       <Board
@@ -273,10 +273,10 @@ export default function Game() {
             onClick={togglePencilMode}
             highlightColor={pencilMode ? "rgba(120, 235, 133, 0.5)" : undefined}
           >
-            <PencilIcon />
+            <PencilIcon style={{ height: "1.25rem", width: "1.25rem" }} />
           </RoundButton>
           <RoundButton onClick={handleTrash}>
-            <TrashIcon />
+            <TrashIcon style={{ height: "1.25rem", width: "1.25rem" }} />
           </RoundButton>
         </ControlsButtonContainer>
         <NumberSelector
