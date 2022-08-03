@@ -59,7 +59,7 @@ const calculateValidMovesForSquare = (puzzle: number[][], rowIndex: number, colI
   return numbers.filter(n => !invalidNumbers.includes(n))
 }
 
-export const getMemo = (puzzle: number[][]): { validMoves: number[][][], countToSquares: number[][][], unsolveable: boolean } => {
+export const calculateValidMoves = (puzzle: number[][]): { validMoves: number[][][], countToSquares: number[][][], unsolveable: boolean } => {
   const length = 9
   let validMoves: number[][][] = Array.from({ length }, () => Array.from({ length }, () => []))
   let countToSquares: number[][][] = Array.from({ length: 10 }, () => [])
@@ -104,7 +104,7 @@ export const getSolutions = (puzzle: number[][], maxSolutions: number=2, solutio
   //   storeSolutions(naiveSolutions)
   //   return naiveSolutions
   // }
-  let memo = getMemo(puzzle)
+  let memo = calculateValidMoves(puzzle)
   if (memo.unsolveable) {
     storeSolutions([])
     return []
@@ -136,7 +136,7 @@ export const naiveSolver = (puzzle: number[][]): string[] => {
     return [JSON.stringify(puzzle)]
   }
 
-  const { countToSquares, validMoves } = getMemo(puzzle)
+  const { countToSquares, validMoves } = calculateValidMoves(puzzle)
   if (countToSquares[1].length > 0) {
     let [rowIndex, colIndex] = countToSquares[1][0]
     let copy = cloneDeep(puzzle)

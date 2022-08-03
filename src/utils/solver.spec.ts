@@ -1,4 +1,4 @@
-import { getMemo, getSolutions } from "./solver"
+import { calculateValidMoves, getSolutions } from "./solver"
 import { solvedPuzzle } from "./constants"
 
 describe("solver",() => {
@@ -86,9 +86,9 @@ describe("solver",() => {
       expect(solutions.length).toEqual(1)
     })
   })
-  describe("getMemo", () => {
+  describe("calculateValidMoves", () => {
     test("for a solved puzzle", () => {
-      let memo = getMemo(solvedPuzzle)
+      let memo = calculateValidMoves(solvedPuzzle)
       expect(memo.unsolveable).toEqual(false)
     })
     test("for a puzzle that is one step from being solved", () => {
@@ -96,7 +96,7 @@ describe("solver",() => {
         for (let colIndex = 0; colIndex < 9; colIndex ++) {
           let puzzle = solvedPuzzle.map(row => [...row])
           puzzle[rowIndex][colIndex] = 0
-          let memo = getMemo(puzzle)
+          let memo = calculateValidMoves(puzzle)
           expect(memo.unsolveable).toEqual(false)
         }
       }
@@ -113,7 +113,7 @@ describe("solver",() => {
         [0,0,0,0,0,0,0,0,0],
         [0,0,0,0,0,0,0,0,0],
       ]
-      let memo = getMemo(unsolvablePuzzle)
+      let memo = calculateValidMoves(unsolvablePuzzle)
       expect(memo.validMoves[0][8].length).toEqual(0)
       expect(memo.unsolveable).toEqual(true)
     })

@@ -1,6 +1,6 @@
 import { cloneDeep, shuffle } from "lodash"
 import { solvedPuzzle } from "./constants"
-import { getMemo, getSolutions } from "./solver"
+import { calculateValidMoves, getSolutions } from "./solver"
 
 const randomIndex = (length: number) => Math.floor(Math.random() * length)
 
@@ -138,7 +138,7 @@ export const generateUnsolvedTruePuzzle = (solvedPuzzle: number[][], maxIteratio
       puzzle[rowIndex][colIndex] = 0
       
       // if unsolvable after removal, add back square and try next move
-      let { unsolveable } = getMemo(puzzle)
+      let { unsolveable } = calculateValidMoves(puzzle)
       if (unsolveable) {
         puzzle[rowIndex][colIndex] = n
         continue
