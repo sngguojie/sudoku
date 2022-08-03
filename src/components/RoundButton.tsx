@@ -6,6 +6,7 @@ const RoundButton = styled.button<{ highlightColor?: string }>`
   height: 36px;
   width: 36px;
   border-radius: 100%;
+  border: 2px solid black;
   background-color: ${(props) =>
     props.disabled ? "grey" : props.highlightColor || "transparent"};
   cursor: pointer;
