@@ -11,3 +11,8 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+@font-face {
+  font-family: indie-flower;
+  src: url('fonts/Indie_Flower/IndieFlower-Regular.ttf');
+}
