@@ -22,11 +22,11 @@
     "web-vitals": "^2.1.0"
   },
   "scripts": {
-    "predeploy": "npx react-scripts build",
+    "predeploy": "npx jest && npx react-scripts build",
     "deploy": "gh-pages -d build",
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "test": "jest",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
