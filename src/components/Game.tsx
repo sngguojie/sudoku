@@ -126,14 +126,6 @@ export default function Game() {
       const { isValid, invalidSquares: newInvalidSquares } =
         getInvalidSquares(solvingState);
       let shouldSetInvalidSquares = !isValid;
-      if (isValid) {
-        let solutions = getSolutions(solvingState);
-        if (solutions.length !== 1) {
-          shouldSetInvalidSquares = true;
-          let [r, c] = moves[moves.length - 1];
-          newInvalidSquares[r][c] = true;
-        }
-      }
       if (shouldSetInvalidSquares) {
         setInvalidSquares(newInvalidSquares);
       } else {
