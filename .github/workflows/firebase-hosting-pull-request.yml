@@ -8,7 +8,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: yarn && yarn predeploy
+      - run: sh -c 'cd functions; yarn && yarn predeploy'
+      - uses: w9jds/firebase-action@master
+        with:
+            args: deploy --only functions
+        env:
+            FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+      - run: sh -c 'cd hosting; yarn && yarn predeploy'
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'

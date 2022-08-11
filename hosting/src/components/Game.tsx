@@ -12,17 +12,29 @@ import { KeyboardEventHandler, useEffect, useCallback, useState } from "react";
 import ReactConfetti from "react-confetti";
 import styled from "styled-components";
 import useLocalStorage from "../hooks/useLocalStorage";
-import { stringifyPuzzle } from "../utils/common";
-import { numbers } from "../utils/constants";
 import {
-  generateSolvedPuzzle,
-  generateUnsolvedTruePuzzle,
-} from "../utils/generator";
-import { calculateValidMoves, getSolutions } from "../utils/solver";
-import { getInvalidSquares } from "../utils/validator";
+  numbers,
+  calculateValidMoves,
+  getSolutions,
+  getInvalidSquares,
+} from "@melvynsng/sudoku-utils";
 import Board from "./Board/Board";
 import NumberSelector from "./NumberSelector";
 import RoundButton from "./RoundButton";
+import { getFunctions, httpsCallable } from "firebase/functions";
+import { initializeApp } from "firebase/app";
+import { getAuth, signInAnonymously, UserCredential } from "firebase/auth";
+
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBIBX9Vt7JRikrRsyIrIU-CDKwQHS9aJWc",
+  authDomain: "sudoku-without-ads.firebaseapp.com",
+  projectId: "sudoku-without-ads",
+  storageBucket: "sudoku-without-ads.appspot.com",
+  messagingSenderId: "78937122796",
+  appId: "1:78937122796:web:e55b36b586e44fb942c2c9",
+  measurementId: "G-GB55QT9G2Z"
+};
 
 type NumberSideType = "right" | "left";
 const ControlsContainer = styled.div<{ numberSide: NumberSideType }>`
@@ -46,7 +58,19 @@ const ControlsButtonContainer = styled.div`
 const HeaderControls = styled.div`
   display: flex;
   width: 100%;
-  justify-content: center;
+  justify-content: flex-end;
+`;
+
+const TitleSpan = styled.div`
+  font-family: "indie-flower";
+  margin: 0;
+  font-size: 1.7rem;
+  font-weight: bold;
+`;
+
+const HeaderDiv = styled.div`
+  display: flex;
+  align-items: center;
 `;
 
 const initializePencilState = () => {
@@ -55,11 +79,6 @@ const initializePencilState = () => {
   });
 };
 
-const fetchPuzzle = async () => {
-  return new Promise<number[][]>((resolve) => {
-    resolve(generateUnsolvedTruePuzzle(generateSolvedPuzzle()));
-  });
-};
 export default function Game() {
   const cheatMode = window.location.pathname === "/cheat";
   const [state, setState] = useLocalStorage<number[][]>("state");
@@ -77,34 +96,57 @@ export default function Game() {
   const [pencilMode, setPencilMode] = useState(false);
   const [throwConfetti, setThrowConfetti] = useState(false);
   const [fetchPuzzleLoading, setFetchPuzzleLoading] = useState(false);
-
+  const resetPencilState = useCallback(() => {
+    let initializedPencilState = initializePencilState();
+    setPencilState(initializedPencilState);
+  }, [setPencilState]);
+  const [user, setUser] = useState<UserCredential>()
+  const app = initializeApp(firebaseConfig);
+  useEffect(() => {
+    const auth = getAuth(app);
+    signInAnonymously(auth).then((authedUser) => {
+      console.log({authedUser})
+      setUser(authedUser)
+    })
+  }, [])
   useEffect(() => {
     if (completedNumbers.length === 9) {
       setThrowConfetti(true);
       setTimeout(() => setThrowConfetti(false), 10000);
     }
   }, [completedNumbers]);
-  const resetPencilState = useCallback(() => {
-    let initializedPencilState = initializePencilState();
-    setPencilState(initializedPencilState);
-  }, [setPencilState]);
 
   const handlefetchPuzzle = useCallback(() => {
     setFetchPuzzleLoading(true);
-    fetchPuzzle().then((puzzle) => {
-      if (cheatMode) {
-        console.log({
-          puzzle: stringifyPuzzle(puzzle),
-        });
-      }
-      setState(puzzle);
-      setSolvingState(puzzle);
+    // const serverUrl =
+    //   "http://localhost:5001/sudoku-without-ads/us-central1/generatePuzzle";
+    // const serverUrl = "https://us-central1-sudoku-without-ads.cloudfunctions.net/generatePuzzle"
+    // fetch(serverUrl)
+    //   .then((response) => response.json())
+    //   .then((data) => {
+    //     console.log({ data });
+    //     setState(data);
+    //     setSolvingState(data);
+    //     setMoves([]);
+    //     setFetchPuzzleLoading(false);
+    //     resetPencilState();
+    //   });
+    const functions = getFunctions(app);
+    const generatePuzzle = httpsCallable<any, number[][]>(
+      functions,
+      "generatePuzzle"
+    );
+    generatePuzzle().then((result) => {
+      const data = result.data;
+      console.log({ result });
+      setState(data);
+      setSolvingState(data);
       setMoves([]);
       setFetchPuzzleLoading(false);
-      fetchPuzzle();
       resetPencilState();
     });
-  }, [setState, setSolvingState, setMoves, resetPencilState, cheatMode]);
+  }, [setState, setSolvingState, setMoves, resetPencilState]);
+
   useEffect(() => {
     if (state === undefined) {
       handlefetchPuzzle();
@@ -289,14 +331,20 @@ export default function Game() {
   return (
     <div onKeyDown={handleKeyDown} tabIndex={0}>
       {throwConfetti && <ReactConfetti numberOfPieces={1000} recycle={false} />}
-      <HeaderControls>
-        <RoundButton onClick={handlefetchPuzzle} disabled={fetchPuzzleLoading}>
-          <PlusIcon style={{ height: "1.25rem", width: "1.25rem" }} />
-        </RoundButton>
-        <RoundButton onClick={handleReset}>
-          <RefreshIcon style={{ height: "1.25rem", width: "1.25rem" }} />
-        </RoundButton>
-      </HeaderControls>
+      <HeaderDiv>
+        <TitleSpan>Sudoku</TitleSpan>
+        <HeaderControls>
+          <RoundButton
+            onClick={handlefetchPuzzle}
+            disabled={fetchPuzzleLoading}
+          >
+            <PlusIcon style={{ height: "1.25rem", width: "1.25rem" }} />
+          </RoundButton>
+          <RoundButton onClick={handleReset}>
+            <RefreshIcon style={{ height: "1.25rem", width: "1.25rem" }} />
+          </RoundButton>
+        </HeaderControls>
+      </HeaderDiv>
       <Board
         state={state}
         solvingState={solvingState}

@@ -1,4 +1,3 @@
-import { solvedPuzzle } from './constants'
 import { generateSolvedPuzzle, generateUnsolvedTruePuzzle } from './generator'
 import { getSolutions, isSolved } from './solver'
 

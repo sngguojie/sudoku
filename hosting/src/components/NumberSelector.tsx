@@ -29,7 +29,7 @@ const NumberSelector = ({
             {Array.from(Array(3).keys()).map((j) => {
               let n = i * 3 + j + 1;
               let highlightColor = highlightedNumbers.includes(n)
-                ? "rgba(120, 235, 133, 0.5)"
+                ? "rgba(70, 199, 50, 0.5)"
                 : undefined;
               let disabled = completedNumbers.includes(n);
               return (

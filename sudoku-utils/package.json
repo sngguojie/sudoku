@@ -1,0 +1,17 @@
+{
+  "name": "@melvynsng/sudoku-utils",
+  "version": "1.0.0",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "jest",
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "jest": "^28.1.3",
+    "typescript": "^4.7.4"
+  }
+}
