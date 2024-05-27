@@ -26,15 +26,6 @@ import { initializeApp } from "firebase/app";
 import { getAuth, signInAnonymously, UserCredential } from "firebase/auth";
 
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBIBX9Vt7JRikrRsyIrIU-CDKwQHS9aJWc",
-  authDomain: "sudoku-without-ads.firebaseapp.com",
-  projectId: "sudoku-without-ads",
-  storageBucket: "sudoku-without-ads.appspot.com",
-  messagingSenderId: "78937122796",
-  appId: "1:78937122796:web:e55b36b586e44fb942c2c9",
-  measurementId: "G-GB55QT9G2Z"
-};
 
 type NumberSideType = "right" | "left";
 const ControlsContainer = styled.div<{ numberSide: NumberSideType }>`
